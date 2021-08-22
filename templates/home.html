@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+
+    <form action="{{ url_for('result') }}" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" required />
+        <br>
+        <br>
+        <label for="denoise_kernel">Choose a kernel:</label>
+        <select id="denoise_kernel" name="denoise_kernel">
+            <option value="Gaussian">Gaussian</option>
+            <option value="Median">Median</option>
+            <option value="Bilateral">Bilateral</option>
+        </select>
+        <br>
+        <br>
+        <label for="superRes">Choose a Super Resolution Model:</label>
+        <select id="superRes" name="superRes">
+            <option value="ESPR_X4">ESPR_X4</option>
+        </select>
+        <br>
+        <br>
+        <input type="submit" />
+
+    </form>
+
+  </body>
+</html>
