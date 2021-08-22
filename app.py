@@ -2,17 +2,15 @@ from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import  FileStorage
 from numpy import array, argmax, expand_dims, argsort
-# import tensorflow as tf
-from tensorflow.keras.applications.mobilenet import preprocess_input
-from tensorflow.keras.preprocessing import image
-from os import listdir
-from tensorflow.keras.models import load_model
 from cv2 import resize, cvtColor, COLOR_GRAY2BGRA, COLOR_BGRA2BGR
 from PIL import Image
 import cv2
 import matplotlib.pyplot as plt
 from cv2 import dnn_superres
 import numpy as np
+import base64
+import io
+
 
 app = Flask(__name__)
 
@@ -27,20 +25,35 @@ def result():
        superRes_model = request.form.get('superRes')
 
        # data = request.files['file']
-       img = Image.open(request.files['file'])
-       img = array(img)
+       """
+       Taking image input from front end, (html), in input_image_PIL , type(input_image_PIL) = PIL Image
+       Converting input_image_PIL to input_image_ndArray,
+       because denoising needs numpy.ndarray datatype for cv2 denoising function to work
+       """
+       input_image_PIL = Image.open(request.files['file'])
+       input_image_ndArray = array(input_image_PIL)
 
-       denoised_image = cv2.bilateralFilter(img, 15, 75, 75)
-       x = type(denoised_image)
-       cv2.imshow("Input Image", img)
-       cv2.imshow("Final Image", denoised_image)
-       cv2.waitKey(0)
-       cv2.destroyAllWindows()
+       # denoising image using cv2
+       denoised_image_ndArray = cv2.bilateralFilter(input_image_ndArray, 15, 75, 75)
+
+       # converting the above 'numpy.ndarray' datatype of denoised_image_ndArray to 'PIL Image' datatype
+       denoised_image_PIL = Image.fromarray(np.uint8(denoised_image_ndArray)).convert('RGB')
+
+       # Get the in-memory info
+       data1 = io.BytesIO()
+       data2 = io.BytesIO()
+
+       # Saving images as in-memory.
+       input_image_PIL.save(data1, "JPEG")
+       denoised_image_PIL.save(data2, "JPEG")
+
+       # Then encoding the saved image files.
+       original_image = base64.b64encode(data1.getvalue())
+       final_image = base64.b64encode(data2.getvalue())
 
 
-
-
-    return render_template('result.html', denoise_kernel=denoise_kernel,superRes_model=superRes_model, x=x)
+    return render_template('result.html', denoise_kernel=denoise_kernel, superRes_model=superRes_model,
+                            original_image=original_image.decode('utf-8'), final_image= final_image.decode('utf-8'))
 
 
 if __name__ == '__main__':
