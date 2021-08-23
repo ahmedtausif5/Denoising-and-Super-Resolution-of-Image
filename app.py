@@ -1,18 +1,11 @@
-
 from flask import Flask, render_template, request
-from werkzeug.utils import secure_filename
-from werkzeug.datastructures import  FileStorage
-from numpy import array, argmax, expand_dims, argsort
-from cv2 import resize, cvtColor, COLOR_GRAY2BGRA, COLOR_BGRA2BGR
 from PIL import Image, UnidentifiedImageError
+# from cv2 import dnn_superres
 import cv2
-import matplotlib.pyplot as plt
-from cv2 import dnn_superres
 import numpy as np
 import base64
 import io
 import copy
-
 
 app = Flask(__name__)
 
@@ -26,7 +19,7 @@ def result():
 
         """
         1. Taking image input from front end, (html), in input_image_PIL , type(input_image_PIL) = PIL Image.
-        2. Converting input PIL Image to RGB (To avoid collision with RGBA or other formats).
+        2. Converting input_image_PIL to RGB (To avoid collision with RGBA or other formats).
         3. Converting input_image_PIL to input_image_ndArray,
            because denoising/superRes needs numpy.ndarray datatype for cv2 functions to work.
         """
@@ -41,7 +34,7 @@ def result():
 
             input_image_PIL_RGB = input_image_PIL.convert('RGB')
             original_image_PIL_RGB = copy.deepcopy(input_image_PIL_RGB)
-            input_image_ndArray = array(input_image_PIL_RGB)
+            input_image_ndArray = np.array(input_image_PIL_RGB)
 
             denoise_filter = request.form.get('denoise_filter')
             superRes_model = request.form.get('superRes')
@@ -70,7 +63,7 @@ def result():
 
             if superRes_model:
                 # Creating Super Res object
-                sr = dnn_superres.DnnSuperResImpl_create()
+                sr = cv2.dnn_superres.DnnSuperResImpl_create()
 
                 if superRes_model == 'FSRCNN_x3':
                     # Reading Super Res model
@@ -137,6 +130,10 @@ def result():
                                     )
         else:
             return render_template('invalid.html')
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
 
 
 if __name__ == '__main__':
