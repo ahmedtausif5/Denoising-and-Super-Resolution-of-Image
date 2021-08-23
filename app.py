@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request
 from PIL import Image, UnidentifiedImageError
-# from cv2 import dnn_superres
 import cv2
 import numpy as np
 import base64
@@ -22,16 +21,11 @@ def result():
         2. Converting input_image_PIL to RGB (To avoid collision with RGBA or other formats).
         3. Converting input_image_PIL to input_image_ndArray,
            because denoising/superRes needs numpy.ndarray datatype for cv2 functions to work.
+        4. Using try catch to handle input files which are not images.
         """
 
         try:
             input_image_PIL = Image.open(request.files['file'])
-
-        except UnidentifiedImageError:
-            input_image_PIL = None
-
-        if input_image_PIL is not None:
-
             input_image_PIL_RGB = input_image_PIL.convert('RGB')
             original_image_PIL_RGB = copy.deepcopy(input_image_PIL_RGB)
             input_image_ndArray = np.array(input_image_PIL_RGB)
@@ -119,6 +113,7 @@ def result():
 
             if not denoise_filter:
                 denoise_filter = "None"
+
             if not superRes_model:
                 superRes_model = "None"
 
@@ -128,7 +123,8 @@ def result():
                                     original_image = original_image.decode('utf-8'),
                                     final_image = final_image.decode('utf-8')
                                     )
-        else:
+
+        except UnidentifiedImageError:
             return render_template('invalid.html')
 
 @app.errorhandler(404)
