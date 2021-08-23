@@ -26,15 +26,17 @@ def result():
 
        # data = request.files['file']
        """
-       Taking image input from front end, (html), in input_image_PIL , type(input_image_PIL) = PIL Image
-       Converting input_image_PIL to input_image_ndArray,
+       1. Taking image input from front end, (html), in input_image_PIL , type(input_image_PIL) = PIL Image
+       2. Converting input PIL Image to RGB (To avoid collision with RGBA or other formats)
+       3. Converting input_image_PIL to input_image_ndArray,
        because denoising needs numpy.ndarray datatype for cv2 denoising function to work
        """
        input_image_PIL = Image.open(request.files['file'])
-       input_image_ndArray = array(input_image_PIL)
+       input_image_PIL_RGB = input_image_PIL.convert('RGB')
+       input_image_ndArray = array(input_image_PIL_RGB)
 
        # denoising image using cv2
-       denoised_image_ndArray = cv2.bilateralFilter(input_image_ndArray, 15, 75, 75)
+       denoised_image_ndArray = cv2.fastNlMeansDenoisingColored(input_image_ndArray, None, 10, 10, 7, 21)
 
        # converting the above 'numpy.ndarray' datatype of denoised_image_ndArray to 'PIL Image' datatype
        denoised_image_PIL = Image.fromarray(np.uint8(denoised_image_ndArray)).convert('RGB')
@@ -44,7 +46,7 @@ def result():
        data2 = io.BytesIO()
 
        # Saving images as in-memory.
-       input_image_PIL.save(data1, "JPEG")
+       input_image_PIL_RGB.save(data1, "JPEG")
        denoised_image_PIL.save(data2, "JPEG")
 
        # Then encoding the saved image files.
@@ -53,7 +55,9 @@ def result():
 
 
     return render_template('result.html', denoise_kernel=denoise_kernel, superRes_model=superRes_model,
-                            original_image=original_image.decode('utf-8'), final_image= final_image.decode('utf-8'))
+                            original_image=original_image.decode('utf-8'), final_image= final_image.decode('utf-8')
+
+                            )
 
 
 if __name__ == '__main__':
