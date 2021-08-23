@@ -10,6 +10,7 @@ from cv2 import dnn_superres
 import numpy as np
 import base64
 import io
+import copy
 
 
 app = Flask(__name__)
@@ -21,46 +22,53 @@ def home():
 @app.route('/result', methods=['GET', 'POST'])
 def result():
     if request.method == 'POST':
-       denoise_kernel = request.form.get('denoise_kernel')
-       superRes_model = request.form.get('superRes')
+        denoise_kernel = request.form.get('denoise_kernel')
+        superRes_model = request.form.get('superRes')
 
-       # data = request.files['file']
-       """
-       1. Taking image input from front end, (html), in input_image_PIL , type(input_image_PIL) = PIL Image
-       2. Converting input PIL Image to RGB (To avoid collision with RGBA or other formats)
-       3. Converting input_image_PIL to input_image_ndArray,
-       because denoising needs numpy.ndarray datatype for cv2 denoising function to work
-       """
-       input_image_PIL = Image.open(request.files['file'])
-       input_image_PIL_RGB = input_image_PIL.convert('RGB')
-       input_image_ndArray = array(input_image_PIL_RGB)
+        # data = request.files['file']
+        """
+        1. Taking image input from front end, (html), in input_image_PIL , type(input_image_PIL) = PIL Image
+        2. Converting input PIL Image to RGB (To avoid collision with RGBA or other formats)
+        3. Converting input_image_PIL to input_image_ndArray,
+        because denoising needs numpy.ndarray datatype for cv2 denoising function to work
+        """
+        input_image_PIL = Image.open(request.files['file'])
+        input_image_PIL_RGB = input_image_PIL.convert('RGB')
+        original_image_PIL_RGB = copy.deepcopy(input_image_PIL_RGB)
+        input_image_ndArray = array(input_image_PIL_RGB)
+
+        if denoise_kernel:
+            # denoising image using cv2
+            input_image_ndArray = cv2.fastNlMeansDenoisingColored(input_image_ndArray, None, 10, 10, 7, 21)
+
+        if superRes_model:
+            # Creating Super Res object
+            sr = dnn_superres.DnnSuperResImpl_create()
+
+            # Reading Super Res model
+            sr.readModel("EDSR_x4.pb")
+
+            # Setting the modelname and scale
+            sr.setModel("edsr", 4)
+
+            # Upscaling the denoised image
+            input_image_ndArray = sr.upsample(input_image_ndArray)
 
 
+        # converting the above 'numpy.ndarray' datatype of denoised_image_ndArray to 'PIL Image' datatype
+        input_image_PIL_RGB = Image.fromarray(np.uint8(input_image_ndArray)).convert('RGB')
 
-       # denoising image using cv2
-       denoised_image_ndArray = cv2.fastNlMeansDenoisingColored(input_image_ndArray, None, 10, 10, 7, 21)
+        # Get the in-memory info
+        data1 = io.BytesIO()
+        data2 = io.BytesIO()
 
-       # converting the above 'numpy.ndarray' datatype of denoised_image_ndArray to 'PIL Image' datatype
-       denoised_image_PIL_RGB = Image.fromarray(np.uint8(denoised_image_ndArray)).convert('RGB')
+        # Saving images as in-memory. (.save function can only be applied to PIL objects)
+        original_image_PIL_RGB.save(data1, "JPEG")
+        input_image_PIL_RGB.save(data2, "JPEG")
 
-
-
-
-
-
-
-
-       # Get the in-memory info
-       data1 = io.BytesIO()
-       data2 = io.BytesIO()
-
-       # Saving images as in-memory.
-       input_image_PIL_RGB.save(data1, "JPEG")
-       denoised_image_PIL_RGB.save(data2, "JPEG")
-
-       # Then encoding the saved image files.
-       original_image = base64.b64encode(data1.getvalue())
-       final_image = base64.b64encode(data2.getvalue())
+        # Then encoding the saved image files.
+        original_image = base64.b64encode(data1.getvalue())
+        final_image = base64.b64encode(data2.getvalue())
 
 
 
