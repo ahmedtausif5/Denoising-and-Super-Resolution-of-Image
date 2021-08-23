@@ -54,9 +54,9 @@ def result():
        final_image = base64.b64encode(data2.getvalue())
 
 
+
     return render_template('result.html', denoise_kernel=denoise_kernel, superRes_model=superRes_model,
                             original_image=original_image.decode('utf-8'), final_image= final_image.decode('utf-8')
-
                             )
 
 
