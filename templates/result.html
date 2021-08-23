@@ -5,10 +5,11 @@
     <title></title>
   </head>
   <body>
-    <h1>{{denoise_kernel}}</h1>
-    <h1>{{superRes_model}}</h1>
-    <h1>{{x}}</h1>
     <img id="picture" src="data:image/jpeg;base64,{{ original_image }}">
     <img id="picture" src="data:image/jpeg;base64,{{ final_image }}">
+    <p>Denoise filter: <b>{{denoise_filter}}</b></p>
+    <p>Super Resolution Model: <b>{{superRes_model}}</b></p>
+    <p>Original Picture Size: <b>{{original_width}} x {{original_height}}</b></p>
+    <p>Final Picture Size: <b>{{final_width}} x {{final_height}}</b></p>
   </body>
 </html>
