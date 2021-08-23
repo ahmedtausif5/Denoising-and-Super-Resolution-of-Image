@@ -35,11 +35,20 @@ def result():
        input_image_PIL_RGB = input_image_PIL.convert('RGB')
        input_image_ndArray = array(input_image_PIL_RGB)
 
+
+
        # denoising image using cv2
        denoised_image_ndArray = cv2.fastNlMeansDenoisingColored(input_image_ndArray, None, 10, 10, 7, 21)
 
        # converting the above 'numpy.ndarray' datatype of denoised_image_ndArray to 'PIL Image' datatype
-       denoised_image_PIL = Image.fromarray(np.uint8(denoised_image_ndArray)).convert('RGB')
+       denoised_image_PIL_RGB = Image.fromarray(np.uint8(denoised_image_ndArray)).convert('RGB')
+
+
+
+
+
+
+
 
        # Get the in-memory info
        data1 = io.BytesIO()
@@ -47,7 +56,7 @@ def result():
 
        # Saving images as in-memory.
        input_image_PIL_RGB.save(data1, "JPEG")
-       denoised_image_PIL.save(data2, "JPEG")
+       denoised_image_PIL_RGB.save(data2, "JPEG")
 
        # Then encoding the saved image files.
        original_image = base64.b64encode(data1.getvalue())
