@@ -25,10 +25,10 @@ def result():
     if request.method == 'POST':
 
         """
-        1. Taking image input from front end, (html), in input_image_PIL , type(input_image_PIL) = PIL Image
-        2. Converting input PIL Image to RGB (To avoid collision with RGBA or other formats)
+        1. Taking image input from front end, (html), in input_image_PIL , type(input_image_PIL) = PIL Image.
+        2. Converting input PIL Image to RGB (To avoid collision with RGBA or other formats).
         3. Converting input_image_PIL to input_image_ndArray,
-        because denoising needs numpy.ndarray datatype for cv2 denoising function to work
+           because denoising/superRes needs numpy.ndarray datatype for cv2 functions to work.
         """
 
         try:
